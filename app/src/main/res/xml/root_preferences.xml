@@ -1,0 +1,41 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Misc">
+
+        <SwitchPreferenceCompat
+            android:id="@+id/alwayson"
+            app:key="@string/pref_always_on"
+            app:title="Keep display ON" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Connect to server">
+
+        <SwitchPreferenceCompat
+            app:key="@string/pref_upload"
+            app:summaryOff="@string/upload_summary_off"
+            app:summaryOn="@string/upload_summary_on"
+            app:title="@string/upload_title" />
+        <Preference
+            app:key="@string/pref_read_qr"
+            app:title="@string/tap_to_connect" />
+        <EditTextPreference
+            android:singleLine="true"
+            android:title="Username"
+            app:dependency="upload"
+            app:selectable="false"
+            app:key="@string/pref_username"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:singleLine="true"
+            android:title="User ID"
+            app:dependency="upload"
+            app:key="@string/pref_userid"
+            app:selectable="false"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

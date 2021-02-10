@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Fitbike Connector</string>
+    <string name="action_settings">Settings</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">Main Flagment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Settings</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <!-- Settings fragment -->
+    <string name="label_qrcode">Connect to Street View Runner:</string>
+    <string name="button_qrcode">Read QR Code</string>
+    <string name="tap_to_connect">Tap to onnect (Read QR Code)</string>
+
+    <!-- Upload Preferences -->
+    <string name="upload_title">Upload your data</string>
+    <string name="upload_summary_on">Send data and connect to Street View Runner</string>
+    <string name="upload_summary_off">Stand alone mode (not upload your data)</string>
+
+    <!-- SharedPreferences keys-->
+    <string name="pref_always_on">alwayson</string>
+    <string name="pref_upload">upload</string>
+    <string name="pref_read_qr">read_QRCode</string>
+    <string name="pref_username">username</string>
+    <string name="pref_userid">userid</string>
+
+</resources>
