@@ -7,6 +7,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
+import android.widget.Toast
+import android.widget.Toast.makeText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -106,7 +108,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> {
-                Log.v(TAG, "invoked option->settings..");
+                Log.v(TAG, "invoked option->settings..")
                 //findNavController(R.id.nav_host_fragment).navigate(R.id.action_FirstFragment_to_SecondFragment)
                 findNavController(R.id.nav_host_fragment).navigate(R.id.action_global_settingsFragment)
                 true
@@ -120,13 +122,13 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         val manager = getSystemService(Context.USB_SERVICE) as UsbManager
         val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager)
         if (availableDrivers.isEmpty()) {
-            Log.i(TAG, "serial driver is empty");
+            Log.i(TAG, "serial driver is empty")
             return false
         }
 
         // Open a connection to the first available driver.
         val driver = availableDrivers[0]
-        val device = driver.device;
+        val device = driver.device
         if (!manager.hasPermission(device)) {
             manager.requestPermission(
                 device,
@@ -144,7 +146,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             //startReadThread()
         }
         catch (e: IOException) {
-            Log.w(TAG, "Unknown USB I/O error", e);
+            Log.w(TAG, "Unknown USB I/O error", e)
             if (port.isOpen) port.close()
             return false
         }
@@ -160,13 +162,22 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         data.put("date", ts)
         //data.put("distance", FieldValue.increment(dist))
         data.put("distance", FieldValue.increment(15))
-        db.collection("cycling").document(userid).set(data, SetOptions.merge())
-            .addOnSuccessListener(OnSuccessListener<Any?> {
-                Log.d(TAG, "Document added !" )
-            })
-            .addOnFailureListener(OnFailureListener {
-                Log.w(TAG, "Error adding document", it)
-            })
+        try {
+            val document = db.collection("cycling").document(userid)
+            document.set(data, SetOptions.merge())
+                    .addOnSuccessListener {
+                        Log.d(TAG, "Document added !")
+                    }
+                    .addOnFailureListener {
+                        Log.w(TAG, "Error adding document", it)
+                    }
+        } catch (e: java.lang.IllegalArgumentException) {
+            e.printStackTrace()
+            runOnUiThread {
+                makeText(applicationContext, "Failed to connect server.\nUser id format error", Toast.LENGTH_SHORT).show()
+            }
+            return false
+        }
         return true
     }
 
