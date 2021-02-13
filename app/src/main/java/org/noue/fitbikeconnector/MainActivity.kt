@@ -15,8 +15,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.preference.PreferenceManager
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
+import androidx.work.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -27,6 +26,9 @@ import com.journeyapps.barcodescanner.CaptureActivity
 import java.io.IOException
 
 class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
+    companion object {
+        lateinit var sInstance: MainActivity  private set
+    }
     private val TAG = "FitbikeMainAct"
     private val mReceiver = MyBroadcastReceiver()
     private val db = FirebaseFirestore.getInstance()
@@ -35,16 +37,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private lateinit var pref: SharedPreferences
     lateinit var port: UsbSerialPort
 
+    //画面回転でも Activity (instance) は再生成される
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate() $this")
         setContentView(R.layout.activity_main)
+        sInstance = this
+        //Log.d(TAG, "service is stopped?: ${sService.isStopped}")
 
         //ToolBar と 戻るボタンの設定
         navController = findNavController(R.id.nav_host_fragment)
         setSupportActionBar(findViewById(R.id.toolbar))
         setupActionBarWithNavController(navController, AppBarConfiguration(navController.graph))
-
-        //mRPMBar = findViewById(R.id.rpmBar)  // fragment の view は取れない
 
         pref = PreferenceManager.getDefaultSharedPreferences(this)
         pref.registerOnSharedPreferenceChangeListener(this)
@@ -54,6 +58,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         // USB再接続時にMainActivityを上げ直すため
         registerReceiver(mReceiver, IntentFilter("android.hardware.usb.action.USB_DEVICE_ATTACHED"))
+
+        if (setupUSBSerial()) { // TODO 再接続で起動してない？
+            Log.d(TAG, "USB setup succeed")
+            createWorkerWhenStopped()
+        }
     }
 
     override fun onDestroy() {
@@ -87,15 +96,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     override fun onSupportNavigateUp()
             = findNavController(R.id.nav_host_fragment).navigateUp()
 
-    class MyBroadcastReceiver: BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            if (action == "android.hardware.usb.action.USB_DEVICE_ATTACHED") {
-                context.startActivity(Intent(context, MainActivity::class.java))
-            }
-        }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -109,7 +109,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         return when (item.itemId) {
             R.id.action_settings -> {
                 Log.v(TAG, "invoked option->settings..")
-                //findNavController(R.id.nav_host_fragment).navigate(R.id.action_FirstFragment_to_SecondFragment)
                 findNavController(R.id.nav_host_fragment).navigate(R.id.action_global_settingsFragment)
                 true
             }
@@ -117,7 +116,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    fun setupUSBSerial() :Boolean {
+    fun updateMainFragment(rpm: Double){
+        val navFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+        val fragment = navFragment?.childFragmentManager?.primaryNavigationFragment
+        if (fragment is MainFragment && fragment.isVisible) {
+            Log.v(TAG, "$this updateMainFragment $rpm")
+            //this.runOnUiThread{ fragment.update(rpm) }
+            fragment.update(rpm)
+        }
+    }
+
+    private fun setupUSBSerial() :Boolean {
+        Log.i(TAG, "setting up USB serial port")
         // Find all available drivers from attached devices.
         val manager = getSystemService(Context.USB_SERVICE) as UsbManager
         val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager)
@@ -143,7 +153,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         try {
             port.open(connection)
             port.setParameters(9600, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
-            //startReadThread()
         }
         catch (e: IOException) {
             Log.w(TAG, "Unknown USB I/O error", e)
@@ -153,7 +162,35 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         return true
     }
 
-    fun saveStore(dist: Double) :Boolean{
+    fun createWorkerWhenStopped() {
+        //if (UsbReaderWorker.sInstance == null || UsbReaderWorker.sInstance?.isStopped == true) // not worked
+        val workManager = WorkManager.getInstance(applicationContext)
+        val workQuery = WorkQuery.Builder
+            .fromUniqueWorkNames(listOf(getString(R.string.work_request_unique)))
+            .addStates(listOf(WorkInfo.State.RUNNING, WorkInfo.State.ENQUEUED))
+            .build()
+        val workInfos = workManager.getWorkInfos(workQuery).get()
+        Log.d(TAG, "Latest worker: ${UsbReaderWorker.sInstance}" )
+        Log.d(TAG, "Running WorkInfo: ${workInfos.size} ${workInfos}")
+        if (workInfos.size == 0) {
+            createWorker()
+        }
+        else {
+            Log.d(TAG, "worker is already running")
+        }
+    }
+
+    private fun createWorker() {
+        val request = OneTimeWorkRequest.from(UsbReaderWorker::class.java)
+        //workManager.getInstance(requireContext()).enqueue(request)
+        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+            getString(R.string.work_request_unique),
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            request
+        )
+    }
+
+    fun uploadToFirestore(dist: Double) :Boolean{
         if (! pref.getBoolean(getString(R.string.pref_upload),false)) { return false }
         val userid = pref.getString(getString(R.string.pref_userid), null) ?: return false
         Log.d(TAG, "invoked saveStore: dist:${dist} userid:${userid}")
@@ -184,3 +221,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 }
 
 class MyCaptureActivity : CaptureActivity()
+
+class MyBroadcastReceiver: BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action
+        if (action == "android.hardware.usb.action.USB_DEVICE_ATTACHED") {
+            context.startActivity(Intent(context, MainActivity::class.java))
+        }
+    }
+}

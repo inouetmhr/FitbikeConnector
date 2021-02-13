@@ -3,14 +3,11 @@
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">Main Flagment</string>
-    <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Settings</string>
-    <string name="previous">Previous</string>
 
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <!-- Notification and WorkManager -->
+    <string name="work_request_unique">USB reader worker</string>
     <!-- Settings fragment -->
-    <string name="label_qrcode">Connect to Street View Runner:</string>
-    <string name="button_qrcode">Read QR Code</string>
     <string name="tap_to_connect">Tap to onnect (Read QR Code)</string>
 
     <!-- Upload Preferences -->
