@@ -2,7 +2,6 @@
     <string name="app_name">Fitbike Connector</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">Main Flagment</string>
     <string name="next">Settings</string>
 
     <!-- Notification and WorkManager -->

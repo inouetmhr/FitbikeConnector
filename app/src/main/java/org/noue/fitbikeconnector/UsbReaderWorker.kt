@@ -156,6 +156,7 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         var rpm = 0.0
         try {
             rpm = data.lines()[0].toDouble()
+            distance += 3
         }  catch (e: NumberFormatException) {
             e.printStackTrace()
         }
@@ -163,11 +164,9 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         rpms.removeAt(0)
         rpm = rpms.average()
 
-        distance += 3
         if (distance % 15 == 0 ) { // TODO 5回に一回だけど、距離を反映させたい
             activity.uploadToFirestore(distance.toDouble())
         }
         activity.updateMainFragment(rpm)
     }
-
 }
