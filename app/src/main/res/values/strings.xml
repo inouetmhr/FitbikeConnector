@@ -8,7 +8,7 @@
     <!-- Notification and WorkManager -->
     <string name="work_request_unique">USB reader worker</string>
     <!-- Settings fragment -->
-    <string name="tap_to_connect">Tap to onnect (Read QR Code)</string>
+    <string name="tap_to_connect">Connect (Read QR Code)</string>
 
     <!-- Upload Preferences -->
     <string name="upload_title">Upload your data</string>

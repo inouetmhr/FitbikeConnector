@@ -13,15 +13,27 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.google.common.io.Resources
+import com.google.rpc.context.AttributeContext
+import com.hoho.android.usbserial.util.SerialInputOutputManager
 import java.io.IOException
+import java.lang.Exception
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
-class UsbReaderWorker (context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+
+class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+//,SerialInputOutputManager.Listener { // for async read version
     companion object{
         val TAG = "UsbReaderWorker"
         val title  = "Reading USB Serial device"
         val notificationId = TAG
         var sInstance : UsbReaderWorker? = null
     }
+
+    private var lastRead = LocalDateTime.MIN
+    private val rpms = MutableList(5) { 0.0 }
+    private var distance = 0
     private val notificationManager =
             applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -43,39 +55,35 @@ class UsbReaderWorker (context: Context, params: WorkerParameters) : CoroutineWo
         }
     }
 
-    private fun reading() {
+    private fun reading() { //
         Log.i(TAG, "USB read thread start")
         var activity = MainActivity.sInstance
-        var msg: String
-        var rpm: Double
-        val rpms = MutableList(5) { 0.0 }
-        var distance = 0
-        //var unread_count = 0
-        var updFlg = false
         try {
+            /*  async read version
+            val usbIoManager = SerialInputOutputManager(activity.port, this)
+            Executors.newSingleThreadExecutor().submit(usbIoManager)
+             */
             while (!this.isStopped) {
                 activity = MainActivity.sInstance
+                /* async read version
+                    if (LocalDateTime.now() > lastRead.plusSeconds(3)) {
+                        //rpms.replaceAll{ 0.0 }
+                        rpms.add(0.0); rpms.removeAt(0)
+                        activity.updateMainFragment(rpms.average())
+                    }
+                    Thread.sleep(3000)
+                }*/
+                // sync read version
                 val buffer = ByteArray(16)
-                val numBytesRead: Int = activity.port.read(buffer, 1000)
-                //Log.v(TAG, "read $numBytesRead")
+                val numBytesRead: Int = activity.port.read(buffer, 2000)
+                val data : String
                 if (numBytesRead > 0) {
-                    msg = String(buffer, 0, numBytesRead)
-                    Log.v(TAG, "read from usb serial:${msg}")
-                    rpm = msg.lines()[0].toDouble()
-                    distance += 3
-                    updFlg = true
-                } else { //unread_count += 1
-                    rpm = 0.0
+                    data = String(buffer, 0, numBytesRead)
+                    Log.v(TAG, "read from usb serial:${data}")
+                } else {
+                    data = "0.0"
                 }
-                rpms.add(rpm)
-                rpms.removeAt(0)
-                rpm = rpms.average()
-
-                if (distance % 15 == 0 && updFlg) {
-                    updFlg = false
-                    activity.uploadToFirestore(distance.toDouble())
-                }
-                activity.updateMainFragment(rpm)
+                dispatch(data)
             }
         } catch (e: IOException) {  //USB外れた場合
             Log.i(TAG, "USB serial disconnected")
@@ -109,7 +117,7 @@ class UsbReaderWorker (context: Context, params: WorkerParameters) : CoroutineWo
         val notification = NotificationCompat.Builder(applicationContext, notificationId)
             .setContentTitle(title)
             //.setContentText("description")
-            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setSmallIcon(R.drawable.ic_baseline_usb_24)
             .setOngoing(true)
             // Add the cancel action to the notification which can
             // be used to cancel the worker
@@ -120,11 +128,46 @@ class UsbReaderWorker (context: Context, params: WorkerParameters) : CoroutineWo
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createChannel() {
-        val chan = NotificationChannel(notificationId,
-            title, NotificationManager.IMPORTANCE_NONE)
+        val chan = NotificationChannel(
+            notificationId,
+            title, NotificationManager.IMPORTANCE_NONE
+        )
         //chan.lightColor = Color.BLUE
         chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         notificationManager.createNotificationChannel(chan)
+    }
+
+    /* async read version
+    override fun onNewData(data: ByteArray?) {
+        val str = data?.let { String(it) }
+        Log.d(TAG, "new data from usb: $str")
+        if (str!=null) {
+            lastRead = LocalDateTime.now()
+            dispatch(str)
+        }
+    }
+
+    override fun onRunError(e: Exception?) {
+        //("Not yet implemented")
+    }*/
+
+    private fun dispatch(data : String){
+        val activity = MainActivity.sInstance
+        var rpm = 0.0
+        try {
+            rpm = data.lines()[0].toDouble()
+        }  catch (e: NumberFormatException) {
+            e.printStackTrace()
+        }
+        rpms.add(rpm)
+        rpms.removeAt(0)
+        rpm = rpms.average()
+
+        distance += 3
+        if (distance % 15 == 0 ) { // TODO 5回に一回だけど、距離を反映させたい
+            activity.uploadToFirestore(distance.toDouble())
+        }
+        activity.updateMainFragment(rpm)
     }
 
 }

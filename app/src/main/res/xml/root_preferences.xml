@@ -18,6 +18,7 @@
             app:summaryOn="@string/upload_summary_on"
             app:title="@string/upload_title" />
         <Preference
+            app:icon="@drawable/ic_baseline_add_link_24"
             app:key="@string/pref_read_qr"
             app:title="@string/tap_to_connect" />
         <EditTextPreference

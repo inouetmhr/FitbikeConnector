@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun setupUSBSerial() :Boolean {
-        Log.i(TAG, "setting up USB serial port")
+        Log.i(TAG, "getting a USB serial port")
         // Find all available drivers from attached devices.
         val manager = getSystemService(Context.USB_SERVICE) as UsbManager
         val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager)
@@ -176,11 +176,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             createWorker()
         }
         else {
-            Log.d(TAG, "worker is already running")
+            Log.i(TAG, "worker is already running")
         }
     }
 
     private fun createWorker() {
+        Log.i(TAG, "creating a new worker request")
         val request = OneTimeWorkRequest.from(UsbReaderWorker::class.java)
         //workManager.getInstance(requireContext()).enqueue(request)
         WorkManager.getInstance(applicationContext).enqueueUniqueWork(
@@ -190,10 +191,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         )
     }
 
-    fun uploadToFirestore(dist: Double) :Boolean{
+    fun uploadToFirestore(dist: Double) :Boolean{ //TODO 移動距離の反映
         if (! pref.getBoolean(getString(R.string.pref_upload),false)) { return false }
         val userid = pref.getString(getString(R.string.pref_userid), null) ?: return false
-        Log.d(TAG, "invoked saveStore: dist:${dist} userid:${userid}")
+        Log.d(TAG, "invoked uploadToFirestore: dist:${dist} userid:${userid}")
         val ts = Timestamp.now()
         val data: HashMap<String, Any> = HashMap()
         data.put("date", ts)
@@ -203,10 +204,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             val document = db.collection("cycling").document(userid)
             document.set(data, SetOptions.merge())
                     .addOnSuccessListener {
-                        Log.d(TAG, "Document added !")
+                        Log.v(TAG, "uploadToFirestore: Document added.")
                     }
                     .addOnFailureListener {
-                        Log.w(TAG, "Error adding document", it)
+                        Log.w(TAG, "uploadToFirestore: Error adding document", it)
                     }
         } catch (e: java.lang.IllegalArgumentException) {
             e.printStackTrace()

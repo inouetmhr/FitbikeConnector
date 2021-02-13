@@ -52,7 +52,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         putString("userid", userid)
                         commit()
                     }*/
-                    Snackbar.make(requireView(), "Connected to the server\n${userid}", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(requireView(), "Connected to the server\n${username}", Snackbar.LENGTH_LONG).show()
                 }
             }
             else -> super.onActivityResult(requestCode, resultCode, data)
