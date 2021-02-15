@@ -44,16 +44,29 @@ class MainFragment : Fragment() {
         mSpeedBar = view.findViewById(R.id.speedBar)
         mLabelSpeed = view.findViewById(R.id.textSpeed) // for debug purpose
 
+        setGearRatio(mGearBar.progress)
+        mGearBar.setOnSeekBarChangeListener(
+            object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                    setGearRatio(progress)
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar) { }
+                override fun onStopTrackingTouch(seekBar: SeekBar) { }
+            })
+
         view.findViewById<Button>(R.id.button_first).setOnClickListener {
             //(activity as MainActivity).createWorkerWhenStopped() // for DEBUG
             findNavController().navigate(R.id.action_MainFragment_to_settingsFragment)
         }
     }
 
-    fun update(rpm :Double){
-        val speed = rpm / 120.0 * mGearBar.progress / mGearBar.max.toFloat() * 50
-        //RPM=120で50 km/h が最高になるように適当に換算 Barの rating を増やすと速度も上がる（ギアを上げるイメージ）
+    fun setGearRatio(progress: Int){
+        (activity as MainActivity).mGearRatio = progress / mGearBar.max.toDouble()
+    }
 
+    fun update(rpm :Double, speed :Double){
+        //val speed = rpm / 120.0 * mGearBar.progress / mGearBar.max.toFloat() * 50
+        //RPM=120で50 km/h が最高になるように適当に換算。Barの数字を増やすと速度も上がる（ギアを上げるイメージ）
         mRPM.post{ mRPM.text = rpm.roundToInt().toString() }
         mRPMBar.progress = rpm.roundToInt()
         mSpeed.post{mSpeed.text = speed.roundToInt().toString()}

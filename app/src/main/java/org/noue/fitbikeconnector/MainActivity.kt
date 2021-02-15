@@ -29,10 +29,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     companion object {
         lateinit var sInstance: MainActivity  private set
     }
+
     private val TAG = "FitbikeMainAct"
     private val mReceiver = MyBroadcastReceiver()
     private val db = FirebaseFirestore.getInstance()
 
+    var mGearRatio = 0.0
     private lateinit var navController: NavController
     private lateinit var pref: SharedPreferences
     lateinit var port: UsbSerialPort
@@ -122,8 +124,13 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         if (fragment is MainFragment && fragment.isVisible) {
             Log.v(TAG, "$this updateMainFragment $rpm")
             //this.runOnUiThread{ fragment.update(rpm) }
-            fragment.update(rpm)
+            fragment.update(rpm, getSpeed(rpm))
         }
+    }
+
+    fun getSpeed(rpm: Double) : Double {
+        // 120 RPM 時に mGearRation = 1.0 で 50km/h がでる換算
+        return 50.0 * rpm / 120.0 * mGearRatio
     }
 
     private fun setupUSBSerial() :Boolean {
@@ -162,7 +169,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         return true
     }
 
-    fun createWorkerWhenStopped() {
+    private fun createWorkerWhenStopped() {
         //if (UsbReaderWorker.sInstance == null || UsbReaderWorker.sInstance?.isStopped == true) // not worked
         val workManager = WorkManager.getInstance(applicationContext)
         val workQuery = WorkQuery.Builder
@@ -191,15 +198,15 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         )
     }
 
-    fun uploadToFirestore(dist: Double) :Boolean{ //TODO 移動距離の反映
+    fun uploadToFirestore(dist: Double) :Boolean{
         if (! pref.getBoolean(getString(R.string.pref_upload),false)) { return false }
         val userid = pref.getString(getString(R.string.pref_userid), null) ?: return false
-        Log.d(TAG, "invoked uploadToFirestore: dist:${dist} userid:${userid}")
+        Log.d(TAG, "uploadToFirestore: dist:${dist} userid:${userid}")
         val ts = Timestamp.now()
         val data: HashMap<String, Any> = HashMap()
         data.put("date", ts)
         //data.put("distance", FieldValue.increment(dist))
-        data.put("distance", FieldValue.increment(15))
+        data.put("distance", FieldValue.increment(dist))
         try {
             val document = db.collection("cycling").document(userid)
             document.set(data, SetOptions.merge())

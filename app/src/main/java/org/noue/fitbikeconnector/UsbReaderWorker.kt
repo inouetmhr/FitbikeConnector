@@ -33,7 +33,8 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
 
     private var lastRead = LocalDateTime.MIN
     private val rpms = MutableList(5) { 0.0 }
-    private var distance = 0
+    private var distance = 0.0
+    private val threashold = 5.0  // 5m 以上進んだら送信する
     private val notificationManager =
             applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -156,17 +157,21 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         var rpm = 0.0
         try {
             rpm = data.lines()[0].toDouble()
-            distance += 3
         }  catch (e: NumberFormatException) {
             e.printStackTrace()
+        }
+        if (rpm > 0.0) {
+            val moved = activity.getSpeed(rpm) * 1000 / 3600.0 // meter/sec
+            Log.d(TAG, "moved (meter): $moved")
+            distance += moved
+            if ( distance > threashold ) {
+                activity.uploadToFirestore(distance)
+                distance = 0.0
+            }
         }
         rpms.add(rpm)
         rpms.removeAt(0)
         rpm = rpms.average()
-
-        if (distance % 15 == 0 ) { // TODO 5回に一回だけど、距離を反映させたい
-            activity.uploadToFirestore(distance.toDouble())
-        }
         activity.updateMainFragment(rpm)
     }
 }
