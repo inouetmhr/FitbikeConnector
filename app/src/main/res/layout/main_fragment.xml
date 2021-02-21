@@ -174,4 +174,40 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/imageButtonLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        android:background="@null"
+        android:contentDescription="turn left button"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_button_left"
+        android:stateListAnimator="@animator/btn_onclick"
+        android:tint="?attr/colorPrimary"
+        app:layout_constraintBottom_toTopOf="@+id/button_first"
+        app:layout_constraintStart_toStartOf="@+id/layoutSpeed"
+        app:layout_constraintTop_toBottomOf="@+id/layoutSpeed"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <ImageButton
+        android:id="@+id/imageButtonRight"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        android:background="@null"
+        android:contentDescription="turn right button"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_button_right"
+        android:stateListAnimator="@animator/btn_onclick"
+        android:tint="?attr/colorPrimary"
+        app:layout_constraintBottom_toTopOf="@+id/button_first"
+        app:layout_constraintEnd_toEndOf="@+id/layoutSpeed"
+        app:layout_constraintStart_toStartOf="@+id/guideline5"
+        app:layout_constraintTop_toBottomOf="@+id/layoutSpeed"
+        app:layout_constraintVertical_bias="0.009" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

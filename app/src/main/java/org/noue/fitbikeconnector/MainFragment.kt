@@ -4,10 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.SeekBar
-import android.widget.TextView
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import kotlin.math.roundToInt
@@ -35,7 +32,7 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        //val mActivity = activity as MainActivity
+        val mActivity = activity as MainActivity
 
         mRPMBar = view.findViewById(R.id.rpmBar)
         mRPM = view.findViewById(R.id.valRPM)
@@ -57,6 +54,13 @@ class MainFragment : Fragment() {
         view.findViewById<Button>(R.id.button_first).setOnClickListener {
             //(activity as MainActivity).createWorkerWhenStopped() // for DEBUG
             findNavController().navigate(R.id.action_MainFragment_to_settingsFragment)
+        }
+
+        view.findViewById<ImageButton>(R.id.imageButtonLeft).setOnClickListener {
+            mActivity.changeDirection("left")
+        }
+        view.findViewById<ImageButton>(R.id.imageButtonRight).setOnClickListener {
+            mActivity.changeDirection("right")
         }
     }
 

@@ -34,7 +34,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private val mReceiver = MyBroadcastReceiver()
     private val db = FirebaseFirestore.getInstance()
 
+    private val maxSPEED = 50.0 // km/h
+    private val maxRPM = 120.0
     var mGearRatio = 0.0
+        set(value) {
+            // 1回転で進む距離 [m]
+            mGearMeter = value * maxSPEED * 1000 / 3600.0 / (maxRPM/60)
+            // 120 RPM 時に mGearRation = 1.0 で 50km/h がでる換算
+            field = value
+        }
+    var mGearMeter = 0.0
+        private set
     private lateinit var navController: NavController
     private lateinit var pref: SharedPreferences
     lateinit var port: UsbSerialPort
@@ -129,8 +139,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     fun getSpeed(rpm: Double) : Double {
-        // 120 RPM 時に mGearRation = 1.0 で 50km/h がでる換算
-        return 50.0 * rpm / 120.0 * mGearRatio
+        return maxSPEED * rpm / maxRPM * mGearRatio
     }
 
     private fun setupUSBSerial() :Boolean {
@@ -198,15 +207,15 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         )
     }
 
-    fun uploadToFirestore(dist: Double) :Boolean{
+    fun uploadToFirestore(dist: Double, direction: String = "") :Boolean{
         if (! pref.getBoolean(getString(R.string.pref_upload),false)) { return false }
         val userid = pref.getString(getString(R.string.pref_userid), null) ?: return false
-        Log.d(TAG, "uploadToFirestore: dist:${dist} userid:${userid}")
+        Log.d(TAG, "uploadToFirestore: dist:${dist} dir:${direction} userid:${userid}")
         val ts = Timestamp.now()
         val data: HashMap<String, Any> = HashMap()
         data.put("date", ts)
-        //data.put("distance", FieldValue.increment(dist))
-        data.put("distance", FieldValue.increment(dist))
+        if (dist != 0.0) data.put("distance", FieldValue.increment(dist))
+        data.put("direction", direction)
         try {
             val document = db.collection("cycling").document(userid)
             document.set(data, SetOptions.merge())
@@ -226,6 +235,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         return true
     }
 
+    fun changeDirection(direction: String) {
+        if (direction == "right" || direction == "left") {
+            Log.i(TAG, "changeDirection: $direction")
+            uploadToFirestore(0.0, direction)
+        }
+    }
 }
 
 class MyCaptureActivity : CaptureActivity()

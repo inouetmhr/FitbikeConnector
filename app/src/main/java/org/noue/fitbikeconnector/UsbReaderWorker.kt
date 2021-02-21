@@ -13,13 +13,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.google.common.io.Resources
-import com.google.rpc.context.AttributeContext
-import com.hoho.android.usbserial.util.SerialInputOutputManager
 import java.io.IOException
-import java.lang.Exception
-import java.time.LocalDateTime
-import java.util.concurrent.Executors
 
 
 class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
@@ -31,10 +25,9 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         var sInstance : UsbReaderWorker? = null
     }
 
-    private var lastRead = LocalDateTime.MIN
     private val rpms = MutableList(5) { 0.0 }
     private var distance = 0.0
-    private val threashold = 5.0  // 5m 以上進んだら送信する
+    private val threshold = 5.0  // 5m 以上進んだら送信する
     private val notificationManager =
             applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -161,10 +154,11 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
             e.printStackTrace()
         }
         if (rpm > 0.0) {
-            val moved = activity.getSpeed(rpm) * 1000 / 3600.0 // meter/sec
+            val moved =  activity.mGearMeter // 1回転あたりに進む距離  [meter]
+            //Log.d(TAG, "${activity.getSpeed(rpm) * 1000 / 3600.0 * 60 / rpm}") // meter
             Log.d(TAG, "moved (meter): $moved")
             distance += moved
-            if ( distance > threashold ) {
+            if ( distance > threshold ) {
                 activity.uploadToFirestore(distance)
                 distance = 0.0
             }
