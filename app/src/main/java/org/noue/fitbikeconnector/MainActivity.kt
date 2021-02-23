@@ -36,14 +36,14 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private val maxSPEED = 50.0 // km/h
     private val maxRPM = 120.0
-    var mGearRatio = 0.0
+    private var mRPMtoKMH = 0.0 * maxSPEED / maxRPM // RPMをかけると時速になる係数
+/*    var mGearRatio = 0.0
         set(value) {
-            // 1回転で進む距離 [m]
             mGearMeter = value * maxSPEED * 1000 / 3600.0 / (maxRPM/60)
             // 120 RPM 時に mGearRation = 1.0 で 50km/h がでる換算
             field = value
-        }
-    var mGearMeter = 0.0
+        }*/
+    var mGearMeter = 0.0 // 1回転で進む距離 [m]
         private set
     private lateinit var navController: NavController
     private lateinit var pref: SharedPreferences
@@ -138,8 +138,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    fun getSpeed(rpm: Double) : Double {
-        return maxSPEED * rpm / maxRPM * mGearRatio
+    fun setGear(gear: Double): Double {// gear: [0..1]
+        //mGearRatio = gear
+        mRPMtoKMH = gear * maxSPEED / maxRPM
+        mGearMeter = gear * maxSPEED * 1000 / 3600.0 / (maxRPM/60) // 1回転で進む距離 [m]
+        // 120 RPM 時に mGearRation = 1.0 で 50km/h がでる換算
+        return mRPMtoKMH
+    }
+
+    private fun getSpeed(rpm: Double) : Double {
+        //return maxSPEED * rpm / maxRPM * mGearRatio
+        return rpm * mRPMtoKMH
     }
 
     private fun setupUSBSerial() :Boolean {

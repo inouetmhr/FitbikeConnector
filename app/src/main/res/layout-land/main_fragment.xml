@@ -91,10 +91,23 @@
             android:progress="6"
             android:progressTint="#03A9F4"
             android:thumbTint="#2196F3"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textGear" />
+
+        <TextView
+            android:id="@+id/valGear"
+            android:layout_width="144dp"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textAlignment="center"
+            android:textColor="#2196F3"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/gearBar" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

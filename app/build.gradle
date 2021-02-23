@@ -7,6 +7,7 @@ plugins {
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
+    viewBinding { enabled = true }
 
     defaultConfig {
         applicationId "org.noue.fitbikeconnector"
@@ -42,7 +43,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.3'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.3'
-    implementation 'com.google.firebase:firebase-firestore:22.0.2'
+    implementation 'com.google.firebase:firebase-firestore:22.1.0'
     implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'androidx.work:work-runtime-ktx:2.5.0'
     testImplementation 'junit:junit:4.13.1'
