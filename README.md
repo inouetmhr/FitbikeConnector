@@ -14,9 +14,11 @@
 
 ## 必要なもの
 - 安価なフィットネスバイク
-- Arduino (Aruduino Nano あるいはその互換品が小さいのでおすすめ）+ 
-  - バイクからの信号取り出し用のミニプラグジャック
-- Andorid + USB接続ケーブル (USB-C to USB mini-B等）
+- Arduino (Aruduino Nano あるいはその互換品が小さいのでおすすめ） 
+  - arduino/ 配下の sketch の書き込み
+  - PIN3 と GND にバイクからの信号取り出し用のミニプラグジャック等を実装
+- Andorid (OS version 8以上）
+  - Arduino接続用USBケーブル (USB-C to USB mini-B等）
 - Firebase (firestore) 接続用の設定ファイル ( app/google-service.json に配置) 
 
 ## 開発環境
