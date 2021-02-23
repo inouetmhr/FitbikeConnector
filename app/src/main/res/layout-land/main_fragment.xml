@@ -19,7 +19,7 @@
         <TextView
             android:id="@+id/textRPM"
             android:layout_width="wrap_content"
-            android:layout_height="38dp"
+            android:layout_height="wrap_content"
             android:text="RPM"
             android:textSize="30sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -67,17 +67,14 @@
 
         <TextView
             android:id="@+id/textGear"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Gear"
             android:textAlignment="center"
             android:textSize="30sp"
-            app:layout_constraintBottom_toTopOf="@+id/gearBar"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <SeekBar
             android:id="@+id/gearBar"
@@ -92,13 +89,12 @@
             android:progressTint="#03A9F4"
             android:thumbTint="#2196F3"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textGear" />
 
         <TextView
             android:id="@+id/valGear"
-            android:layout_width="144dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0"
             android:textAlignment="center"
@@ -129,7 +125,6 @@
             android:textAlignment="center"
             android:textSize="30sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -151,7 +146,7 @@
 
         <TextView
             android:id="@+id/valSpeed"
-            android:layout_width="144dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0"
             android:textAlignment="center"
