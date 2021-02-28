@@ -16,6 +16,11 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.preference.PreferenceManager
 import androidx.work.*
+import com.google.android.gms.maps.OnStreetViewPanoramaReadyCallback
+import com.google.android.gms.maps.StreetViewPanorama
+import com.google.android.gms.maps.StreetViewPanoramaFragment
+import com.google.android.gms.maps.SupportStreetViewPanoramaFragment
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -25,7 +30,9 @@ import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.journeyapps.barcodescanner.CaptureActivity
 import java.io.IOException
 
-class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
+class MainActivity : AppCompatActivity(),
+    SharedPreferences.OnSharedPreferenceChangeListener,
+    OnStreetViewPanoramaReadyCallback {
     companion object {
         lateinit var sInstance: MainActivity  private set
     }
@@ -46,7 +53,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     var mGearMeter = 0.0 // 1回転で進む距離 [m]
         private set
     private lateinit var navController: NavController
-    private lateinit var pref: SharedPreferences
+    lateinit var pref: SharedPreferences
     lateinit var port: UsbSerialPort
 
     //画面回転でも Activity (instance) は再生成される
@@ -71,7 +78,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         // USB再接続時にMainActivityを上げ直すため
         registerReceiver(mReceiver, IntentFilter("android.hardware.usb.action.USB_DEVICE_ATTACHED"))
 
-        if (setupUSBSerial()) { // TODO 再接続で起動してない？
+        if (setupUSBSerial()) {
             Log.d(TAG, "USB setup succeed")
             createWorkerWhenStopped()
         }
@@ -244,12 +251,28 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         return true
     }
 
+    fun move(distance: Double) {
+        val navFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+        val fragment = navFragment?.childFragmentManager?.primaryNavigationFragment
+        if (fragment is MapsFragment && fragment.isVisible) {
+            Log.v(TAG, "$this move() $distance")
+            //this.runOnUiThread{ fragment.update(rpm) }
+            fragment.moveFor(distance)
+        }
+    }
+
     fun changeDirection(direction: String) {
         if (direction == "right" || direction == "left") {
             Log.i(TAG, "changeDirection: $direction")
             uploadToFirestore(0.0, direction)
         }
     }
+
+    override fun onStreetViewPanoramaReady(streetViewPanorama: StreetViewPanorama) {
+        val sanFrancisco = LatLng(37.754130, -122.447129)
+        streetViewPanorama.setPosition(sanFrancisco)
+    }
+
 }
 
 class MyCaptureActivity : CaptureActivity()

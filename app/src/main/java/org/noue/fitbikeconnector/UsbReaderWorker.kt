@@ -160,6 +160,7 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
             distance += moved
             if ( distance > threshold ) {
                 activity.uploadToFirestore(distance)
+                activity.move(distance)
                 distance = 0.0
             }
         }

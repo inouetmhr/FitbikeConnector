@@ -65,7 +65,9 @@ class MainFragment : Fragment() {
 
         view.findViewById<Button>(R.id.button_first).setOnClickListener {
             //(activity as MainActivity).createWorkerWhenStopped() // for DEBUG
-            findNavController().navigate(R.id.action_MainFragment_to_settingsFragment)
+            //findNavController().navigate(R.id.action_MainFragment_to_settingsFragment)
+            //findNavController().navigate(R.id.action_MainFragment_to_mapActivity)
+            findNavController().navigate(R.id.action_MainFragment_to_mapsFragment2)
         }
 
         view.findViewById<ImageButton>(R.id.imageButtonLeft).setOnClickListener {

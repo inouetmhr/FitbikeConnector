@@ -16,10 +16,20 @@
             app:destination="@id/settingsFragment"
             app:enterAnim="@anim/nav_default_enter_anim"
             app:exitAnim="@anim/nav_default_exit_anim" />
+        <action
+            android:id="@+id/action_MainFragment_to_mapsFragment2"
+            app:destination="@id/mapsFragment2" />
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
         android:name="org.noue.fitbikeconnector.SettingsFragment"
         android:label="Settings" />
-    <action android:id="@+id/action_global_settingsFragment" app:destination="@id/settingsFragment" />
+    <action
+        android:id="@+id/action_global_settingsFragment"
+        app:destination="@id/settingsFragment" />
+    <fragment
+        android:id="@+id/mapsFragment2"
+        android:name="org.noue.fitbikeconnector.MapsFragment"
+        android:label="MapsFragment" />
+
 </navigation>
