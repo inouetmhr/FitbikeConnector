@@ -46,13 +46,6 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val mActivity = activity as MainActivity
 
-/*        mRPMBar = view.findViewById(R.id.rpmBar)
-        mRPM = view.findViewById(R.id.valRPM)
-        mGearBar = view.findViewById(R.id.gearBar)
-        mSpeed = view.findViewById(R.id.valSpeed)
-        mSpeedBar = view.findViewById(R.id.speedBar)
-        mLabelSpeed = view.findViewById(R.id.textSpeed) // for debug purpose*/
-
         setGearRatio()
         binding.gearBar.setOnSeekBarChangeListener(
             object : SeekBar.OnSeekBarChangeListener {
@@ -65,6 +58,7 @@ class MainFragment : Fragment() {
 
         view.findViewById<Button>(R.id.button_first).setOnClickListener {
             //(activity as MainActivity).createWorkerWhenStopped() // for DEBUG
+            //(activity as MainActivity).onUSbTimeout()
             findNavController().navigate(R.id.action_MainFragment_to_settingsFragment)
         }
 
@@ -86,12 +80,6 @@ class MainFragment : Fragment() {
     fun update(rpm :Double, speed :Double){
         //val speed = rpm / 120.0 * mGearBar.progress / mGearBar.max.toFloat() * 50
         //RPM=120で50 km/h が最高になるように適当に換算。Barの数字を増やすと速度も上がる（ギアを上げるイメージ）
-        /*
-        mRPM.post{ mRPM.text = rpm.roundToInt().toString() }
-        mRPMBar.progress = rpm.roundToInt()
-        mSpeed.post{mSpeed.text = speed.roundToInt().toString()}
-        mSpeedBar.progress = speed.roundToInt()
-         */
         binding.valRPM.post{ binding.valRPM.text = rpm.roundToInt().toString() }
         binding.rpmBar.progress = rpm.roundToInt()
         binding.valSpeed.post{binding.valSpeed.text = speed.roundToInt().toString()}

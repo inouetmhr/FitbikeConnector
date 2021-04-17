@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -15,9 +16,10 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import java.io.IOException
 
-
 class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 //,SerialInputOutputManager.Listener { // for async read version
+    class SygnalTimeoutExcetpion(msg: String? = null): RuntimeException(msg)
+
     companion object{
         val TAG = "UsbReaderWorker"
         val title  = "Reading USB Serial device"
@@ -25,6 +27,7 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         var sInstance : UsbReaderWorker? = null
     }
 
+    private var timer = SystemClock.elapsedRealtime()
     private val rpms = MutableList(5) { 0.0 }
     private var distance = 0.0
     private val threshold = 5.0  // 5m 以上進んだら送信する
@@ -79,7 +82,10 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
                 }
                 dispatch(data)
             }
-        } catch (e: IOException) {  //USB外れた場合
+        } catch (e: SygnalTimeoutExcetpion) {
+            Log.i(TAG,"USB read thread terminated by no signal timeout")
+            activity.onUSbTimeout()
+        }  catch (e: IOException) {  //USB外れた場合
             Log.i(TAG, "USB serial disconnected")
             activity.runOnUiThread{
                 Toast.makeText(
@@ -167,5 +173,13 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         rpms.removeAt(0)
         rpm = rpms.average()
         activity.updateMainFragment(rpm)
+
+        if (rpm > 0.0) {
+            timer = SystemClock.elapsedRealtime()
+        } else if (SystemClock.elapsedRealtime() - timer > 30 * 60 * 1000) {
+            //rpm=0がn分以上続いたら、処理完了して thread を止める
+            //新しいDialogFragmentを作って表示するのは外側で
+            throw(SygnalTimeoutExcetpion("No USB Signal Timeout"))
+        }
     }
 }

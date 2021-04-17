@@ -1,5 +1,6 @@
 package org.noue.fitbikeconnector
 
+import android.app.Dialog
 import android.content.*
 import android.hardware.usb.UsbManager
 import android.os.Bundle
@@ -9,7 +10,9 @@ import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.Toast
 import android.widget.Toast.makeText
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -71,7 +74,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         // USB再接続時にMainActivityを上げ直すため
         registerReceiver(mReceiver, IntentFilter("android.hardware.usb.action.USB_DEVICE_ATTACHED"))
 
-        if (setupUSBSerial()) { // TODO 再接続で起動してない？
+        if (setupUSBSerial()) {
             Log.d(TAG, "USB setup succeed")
             createWorkerWhenStopped()
         }
@@ -250,6 +253,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             uploadToFirestore(0.0, direction)
         }
     }
+
+    fun onUSbTimeout() {
+        if (port.isOpen) port.close()
+        val dialog = NoSignalDialogFragment()
+        dialog.show(supportFragmentManager, "NoticeDialogFragment")
+    }
 }
 
 class MyCaptureActivity : CaptureActivity()
@@ -260,5 +269,22 @@ class MyBroadcastReceiver: BroadcastReceiver() {
         if (action == "android.hardware.usb.action.USB_DEVICE_ATTACHED") {
             context.startActivity(Intent(context, MainActivity::class.java))
         }
+    }
+}
+
+class NoSignalDialogFragment : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return activity?.let {
+            val builder = AlertDialog.Builder(it)
+            builder.setMessage("No signal from USB device")
+                .setPositiveButton("Resume")
+                { dialog, id ->
+                    context?.startActivity(Intent(context, MainActivity::class.java))
+                }
+            //.setNegativeButton("Cancel", // ステート遷移を単純化するため cancel は不要
+            //    DialogInterface.OnClickListener { dialog, id ->
+            //    })
+            builder.create()
+        } ?: throw IllegalStateException("Activity cannot be null")
     }
 }
