@@ -173,6 +173,7 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         rpms.removeAt(0)
         rpm = rpms.average()
         activity.updateMainFragment(rpm)
+        //Log.i(TAG, "rpm: $rpm")
 
         if (rpm > 0.0) {
             timer = SystemClock.elapsedRealtime()

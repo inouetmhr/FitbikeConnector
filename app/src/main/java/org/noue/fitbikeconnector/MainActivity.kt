@@ -258,6 +258,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         if (port.isOpen) port.close()
         val dialog = NoSignalDialogFragment()
         dialog.show(supportFragmentManager, "NoticeDialogFragment")
+        //Pause以降で呼ばれるとここでIllegalStateExceptionがおこるけど、
+        //リソースは解放できていて悪影響は無く、再開時に初期化も走るので無視する
+        //TODO むしろそのケースはしてNotificationで通知すべきかも
     }
 }
 
@@ -277,8 +280,7 @@ class NoSignalDialogFragment : DialogFragment() {
         return activity?.let {
             val builder = AlertDialog.Builder(it)
             builder.setMessage("No signal from USB device")
-                .setPositiveButton("Resume")
-                { dialog, id ->
+                .setPositiveButton("Resume") { dialog, id ->
                     context?.startActivity(Intent(context, MainActivity::class.java))
                 }
             //.setNegativeButton("Cancel", // ステート遷移を単純化するため cancel は不要
