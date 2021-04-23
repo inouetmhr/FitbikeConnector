@@ -73,12 +73,12 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
                 // sync read version
                 val buffer = ByteArray(16)
                 val numBytesRead: Int = activity.port.read(buffer, 2000)
-                val data : String
+                val data : String?
                 if (numBytesRead > 0) {
                     data = String(buffer, 0, numBytesRead)
                     Log.v(TAG, "read from usb serial:${data}")
                 } else {
-                    data = "0.0"
+                    data = null // 0.0
                 }
                 dispatch(data)
             }
@@ -151,18 +151,21 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         //("Not yet implemented")
     }*/
 
-    private fun dispatch(data : String){
+    private fun dispatch(data : String?){
         val activity = MainActivity.sInstance
-        var rpm = 0.0
-        try {
+        val now = SystemClock.elapsedRealtime()
+        val interval =  now - timer
+        var rpm = if (data==null) 0.0 else 60 * 1000.0 / interval
+        /*try {
             rpm = data.lines()[0].toDouble()
         }  catch (e: NumberFormatException) {
             e.printStackTrace()
-        }
-        if (rpm > 0.0) {
+        }*/
+        if (rpm > 180.0) return // チャタリング対策
+        if (rpm > 0.0 ) {
             val moved =  activity.mGearMeter // 1回転あたりに進む距離  [meter]
             //Log.d(TAG, "${activity.getSpeed(rpm) * 1000 / 3600.0 * 60 / rpm}") // meter
-            Log.d(TAG, "moved (meter): $moved")
+            Log.d(TAG, "moved: $moved (meter), $rpm (rpm)")
             distance += moved
             if ( distance > threshold ) {
                 activity.uploadToFirestore(distance)
@@ -176,8 +179,8 @@ class UsbReaderWorker(context: Context, params: WorkerParameters) : CoroutineWor
         //Log.i(TAG, "rpm: $rpm")
 
         if (rpm > 0.0) {
-            timer = SystemClock.elapsedRealtime()
-        } else if (SystemClock.elapsedRealtime() - timer > 30 * 60 * 1000) {
+            timer = now
+        } else if (interval > 30 * 60 * 1000) {
             //rpm=0がn分以上続いたら、処理完了して thread を止める
             //新しいDialogFragmentを作って表示するのは外側で
             throw(SygnalTimeoutExcetpion("No USB Signal Timeout"))
